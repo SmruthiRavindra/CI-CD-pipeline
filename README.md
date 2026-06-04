@@ -1,8 +1,8 @@
-# GitLab CI/CD Pipeline: Jenkins Trigger & Slack Notification
+# GitLab Native Integrations: Jenkins Trigger & Slack Notification
 
-This repository contains a lightweight, native GitLab CI/CD pipeline that automatically triggers a remote Jenkins build and sends a status notification to Slack whenever code is pushed to the `main` branch.
+This repository is configured to use native GitLab integrations to automatically trigger a remote Jenkins build and send status notifications to Slack whenever code is pushed. 
 
-The execution of the pipeline happens entirely on remote **GitLab Runners** and does not require any local CLI tools or dependencies beyond standard Git.
+By utilizing GitLab's built-in centralized template `Workflows/Branch-Pipelines.gitlab-ci.yml` in [.gitlab-ci.yml](file:///c:/Users/smrut/OneDrive/Desktop/CI%20CD%20pipeline/.gitlab-ci.yml), we establish a standard CI/CD workflow without writing or maintaining any custom execution code locally.
 
 ---
 
@@ -10,54 +10,51 @@ The execution of the pipeline happens entirely on remote **GitLab Runners** and 
 
 ```mermaid
 graph LR
-    Developer[Local Developer] -->|git push| GitLab[GitLab Repo]
-    GitLab -->|Trigger Pipeline on main| Runner[GitLab Runner]
-    Runner -->|curl -X POST| Jenkins[Jenkins Build Trigger]
-    Runner -->|curl -X POST| Slack[Slack Webhook]
+    Developer[Local Developer] -->|git push| GitLab[GitLab Server]
+    GitLab -->|Native Integration Webhook| Jenkins[Jenkins Build Trigger]
+    GitLab -->|Native Integration Webhook| Slack[Slack Channel]
 ```
 
 ---
 
 ## Configuration
 
-To make this pipeline function correctly, you must configure three secret repository-level variables in GitLab. Do not hardcode these values in the pipeline code.
+To set up this workflow, you must configure both integrations in the GitLab project settings interface. No code changes are required in the repository.
 
-### Required GitLab CI/CD Variables
+### 1. Jenkins Integration
 
-1. Navigate to **Settings > CI/CD** in your GitLab repository sidebar.
-2. Expand the **Variables** section.
-3. Click **Add variable** and configure the following:
+Natively notifies Jenkins of pushes and updates, and displays build statuses on GitLab commits/merge requests.
 
-| Key | Value Description | Type | Masked |
-| :--- | :--- | :--- | :---: |
-| **`JENKINS_URL`** | The URL of your remote Jenkins job trigger (e.g., `https://jenkins.example.com/job/my-project-build/build`) | Variable | Yes |
-| **`JENKINS_WEBHOOK_TOKEN`** | The authentication token configured in Jenkins for remote triggering | Variable | Yes |
-| **`SLACK_WEBHOOK_URL`** | The incoming Slack webhook URL (e.g., `https://hooks.slack.com/services/YOUR_WORKSPACE_ID/YOUR_CHANNEL_ID/YOUR_TOKEN`) | Variable | Yes |
+1. Navigate to **Settings > Integrations** in your GitLab repository.
+2. Select **Jenkins** from the integrations list.
+3. Configure the following settings:
+   * **Active**: Check the box to enable the integration.
+   * **Trigger**: Check **Push** (and optionally **Merge request**).
+   * **Jenkins server URL**: E.g., `https://jenkins.example.com`
+   * **Project name**: The exact name of your Jenkins job (e.g., `my-project-build`).
+   * **Username**: Your Jenkins username.
+   * **Password/API token**: Your Jenkins API token or password.
+4. Click **Test settings** to verify the connection, then click **Save changes**.
 
-> [!IMPORTANT]
-> Make sure to check **Mask variable** for all of the above to prevent your secrets and webhook URLs from appearing in build logs.
+### 2. Slack Notifications Integration
 
----
+Natively sends beautifully formatted rich cards to your Slack channel on push events.
 
-## Pipeline Workflow
-
-The pipeline is defined in [.gitlab-ci.yml](file:///c:/Users/smrut/OneDrive/Desktop/CI%20CD%20pipeline/.gitlab-ci.yml) and consists of two sequential stages:
-
-### 1. `trigger_jenkins`
-* **Job**: `trigger_jenkins_job`
-* **Action**: Runs a `curl -X POST` command targeting the configured `$JENKINS_URL` with the `$JENKINS_WEBHOOK_TOKEN` to start the build.
-* **Runs on**: Only when code changes are pushed to the `main` branch.
-
-### 2. `notify_slack`
-* **Job**: `notify_slack_job`
-* **Action**: Sends a JSON-formatted payload using `curl` to the `$SLACK_WEBHOOK_URL` informing the Slack channel about the new push.
-* **Runs on**: Only when code changes are pushed to the `main` branch.
+1. Navigate to **Settings > Integrations** in your GitLab repository.
+2. Select **Slack notifications** from the integrations list.
+3. Configure the following settings:
+   * **Active**: Check the box to enable notifications.
+   * **Trigger**: Check **Push** (and optionally **Pipeline** or **Merge request**).
+   * **Webhook**: Enter your incoming Slack Webhook URL (e.g., `https://hooks.slack.com/services/...`).
+   * **Username**: Optional sender name (e.g., `GitLab CI`).
+   * **Channel**: The target Slack channel (e.g., `#ci-cd-alerts`).
+4. Click **Test settings** to verify the channel message, then click **Save changes**.
 
 ---
 
 ## Developer Usage
 
-To trigger the pipeline, simply make changes to your repository and push them to the `main` branch:
+To trigger the pipeline, simply make changes to your repository and push them:
 
 ```bash
 # Clone the repository
@@ -68,6 +65,8 @@ cd <repo-name>
 git add .
 git commit -m "feat: Add new features"
 
-# Push to the main branch to trigger the pipeline
+# Push to the remote repository
 git push origin main
 ```
+
+Since the integrations are configured at the GitLab project level, the triggers will execute automatically server-side upon push.
