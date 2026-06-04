@@ -1,0 +1,7 @@
+stages:
+  - test
+
+test_pipeline:
+  stage: test
+  script:
+    - echo "Pipeline is working!"
