@@ -2,7 +2,7 @@
 
 This repository is configured to use native GitLab integrations to automatically trigger a remote Jenkins build and send status notifications to Slack whenever code is pushed. 
 
-By utilizing GitLab's built-in centralized template `Workflows/Branch-Pipelines.gitlab-ci.yml` in [.gitlab-ci.yml](file:///c:/Users/smrut/OneDrive/Desktop/CI%20CD%20pipeline/.gitlab-ci.yml), we establish a standard CI/CD workflow without writing or maintaining any custom execution code locally.
+By utilizing GitLab's built-in centralized template `Workflows/Branch-Pipelines.gitlab-ci.yml` in [.gitlab-ci.yml](file:///c:/Users/smrut/OneDrive/Desktop/CI%20CD%20pipeline/.gitlab-ci.yml), we establish a standard CI/CD workflow without writing or maintaining any custom execution code locally
 
 ---
 
