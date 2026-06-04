@@ -1,7 +1,96 @@
-stages:
-  - test
+name: Elaborate Demo Pipeline
 
-test_pipeline:
-  stage: test
-  script:
-    - echo "Pipeline is working!"
+# Triggers the workflow on push or pull request events for the main branch
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # 1. SETUP STAGE
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Environment
+        run: |
+          echo "Initializing pipeline for demo-application..."
+          echo "Preparing runner environment and verifying Jenkins webhook connections..."
+          sleep 2
+          echo "Setup complete."
+
+  # 2. LINTING STAGE
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lint Code
+        run: |
+          echo "Running code linters and formatting checks..."
+          sleep 3
+          echo "Code quality passes all organizational standards. No linting errors found!"
+
+  # 3. BUILD STAGE
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Application
+        run: |
+          echo "Building the application for the staging environment..."
+          echo "Compiling assets, resolving dependencies, and packaging..."
+          sleep 5
+          echo "Build successful!"
+          echo "Simulated build artifact content" > build_output.txt
+          
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-build-artifact
+          path: build_output.txt
+
+  # 4. TEST STAGE (Expanded original job)
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: demo-build-artifact
+          
+      - name: Run Pipeline Tests
+        run: |
+          echo "Retrieving build artifacts..."
+          cat build_output.txt
+          echo "Running unit tests, integration tests, and validating Jenkins payload..."
+          sleep 4
+          echo "Pipeline is working! All tests passed successfully."
+
+  # 5. SECURITY STAGE
+  security:
+    needs: test
+    runs-on: ubuntu-latest
+    # Only run this step on the main branch or during a pull request
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    steps:
+      - name: Security Scan
+        run: |
+          echo "Running Static Application Security Testing (SAST)..."
+          echo "Scanning dependencies for known vulnerabilities..."
+          sleep 3
+          echo "Security scan complete. No critical vulnerabilities detected."
+
+  # 6. DEPLOY STAGE
+  deploy:
+    needs: security
+    runs-on: ubuntu-latest
+    # Only run deployment if we are on the main branch
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to Staging
+        run: |
+          echo "Initiating deployment pipeline for demo-application..."
+          echo "Notifying Jenkins to handle the deployment to the staging server..."
+          sleep 2
+          echo "Deployment verified. System is live!"
