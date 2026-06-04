@@ -69,4 +69,4 @@ git commit -m "feat: Add new features"
 git push origin main
 ```
 
-Since the integrations are configured at the GitLab project level, the triggers will execute automatically server-side upon push.
+Since the integrations are configured at the GitLab project level, the triggers will execute automatically server-side upon push
