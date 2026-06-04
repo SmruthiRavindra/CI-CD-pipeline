@@ -1,0 +1,49 @@
+# =========================================================================
+# GitLab CI/CD Pipeline Configuration
+# =========================================================================
+#
+# NOTE: The execution of these jobs happens entirely on GitLab's Runners
+# (remote execution environments), not on your local machine. When a developer
+# runs a standard 'git push', GitLab detects the commit on the remote repository
+# and triggers this pipeline automatically.
+#
+# SECURITY IMPORTANT:
+# Sensitive parameters like URLs and tokens should NEVER be hardcoded here.
+# Instead, they must be added to GitLab's interface:
+# Settings > CI/CD > Variables page as "Masked" (and optionally "Protected")
+# variables so they do not leak into the build logs.
+#
+# =========================================================================
+
+stages:
+  - trigger_jenkins
+  - notify_slack
+
+# Default image with curl pre-installed to avoid installing it in every job
+default:
+  image: curlimages/curl:latest
+
+trigger_jenkins_job:
+  stage: trigger_jenkins
+  rules:
+    # This job only runs when code is pushed specifically to the main branch
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - echo "Triggering Jenkins build..."
+    # Sends a POST request to the remote Jenkins URL using the webhook token.
+    # $JENKINS_URL and $JENKINS_WEBHOOK_TOKEN are defined in GitLab Settings > CI/CD > Variables.
+    - curl -X POST "${JENKINS_URL}?token=${JENKINS_WEBHOOK_TOKEN}"
+
+notify_slack_job:
+  stage: notify_slack
+  rules:
+    # This job only runs when code is pushed specifically to the main branch
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - echo "Sending notification to Slack..."
+    # Sends a JSON payload to the Slack Incoming Webhook URL.
+    # $SLACK_WEBHOOK_URL is defined in GitLab Settings > CI/CD > Variables.
+    - >
+      curl -X POST -H 'Content-type: application/json'
+      --data '{"text":"New code pushed by a team member! Jenkins build triggered automatically by GitLab CI."}'
+      "${SLACK_WEBHOOK_URL}"
